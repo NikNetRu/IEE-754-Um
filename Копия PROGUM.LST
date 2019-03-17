@@ -1,0 +1,174 @@
+  Wed Jan 14 2015 17:27                                                                                                  Page    1
+
+
+Программа умножения чисел с плавающей точкой (2байта) в формате IEEE 754
+
+
+
+
+               2500 A.D. 8051 Macro Assembler  -  Version 4.02a
+               ------------------------------------------------
+
+                       Input  Filename : progum.asm
+                       Output Filename : progum.obj
+
+
+    1                          	
+    2   0000   79 12           	NormFm	mov R1, #12H; // программа нормировки, переносит знак в нулевой (Х0) байт, экспоненту в Х1 б
+                                айт, мантиссу в Х2..Х4
+    3   0002   75 41 02        		mov 41h, #2d;
+    4   0005   75 42 00        		mov 42H, #0H;
+    5   0008   C3              		clr C;
+    6   0009   80 02           		SJMP Format;
+    7   000B   79 22           	NxtSym	Mov R1, #22H;
+    8   000D   E7              	Format	mov A, @R1; // сдвигаем старший бит дробной части 
+    9   000E   33              		RLC A;
+   10   000F   03              		RR A;
+   11   0010   F7              		mov @R1, A;
+   12   0011   19              		Dec R1;  // сдвигаем степено мантисы в байт 12Н и 22Н соответсвенно для А и В 
+   13   0012   E7              		mov A, @R1;
+   14   0013   33              		RLC A;
+   15   0014   F7              		mov @R1, A;
+   16   0015   E4              		clr A;  // записываем знак в первый бит ячейки 10Н и 20Н соответсвенно
+   17   0016   33              		RLC A;
+   18   0017   19              		dec R1;
+   19   0018   F7              		mov @R1, A;
+   20   0019                   		
+   21   0019   E5 42           		mov A, 42H;
+   22   001B   24 10           		Add A, #10H;
+   23   001D   F5 42           		mov 42H, A;
+   24   001F   F8              		mov R0, A;
+   25   0020   7A 04           		mov R2, #4d;
+   26   0022   DA 03           	nxt	DJNZ R2, nxt1;
+   27   0024   02 00 B7        		LJMP lstmet;
+   28   0027   08              	nxt1	inc R0;
+   29   0028   E6              		mov A, @R0;
+   30   0029   60 F7           		JZ nxt;
+   31   002B                   		
+   32   002B   09              		inc R1;
+   33   002C   09              		inc R1;
+   34   002D   E7              		mov A, @R1;
+   35   002E   24 80           		Add A, #128d;
+   36   0030   F7              		mov @R1, A;
+   37   0031   D5 41 D7        		DJNZ 41H, NxtSym;
+   38                          	
+   39                          	
+   40                          	
+   41                          	
+   42                          	
+   43   0034   E4              		clr A; // сложение знаков чисел
+   44   0035   25 10           		Add A, 10H;
+   45   0037   25 20           		Add A, 20H;
+   46   0039   F5 30           		mov 30H, A;
+  Wed Jan 14 2015 17:27                                                                                                  Page    2
+
+
+
+
+   47                          	
+   48   003B                   		
+   49   003B   79 31           		mov R1, #31H;
+   50   003D   E4              		clr A; // сложение  экпонент с тестом
+   51   003E   25 11           		Add A, 11H;
+   52   0040   35 21           		Addc A, 21H;
+   53   0042   40 08           		JC testp;
+   54   0044   C3              		clr C;
+   55   0045   94 7F           		Subb A, #127d;
+   56   0047   40 6E           		JC lstmet;
+   57   0049   F7              		mov @R1, A;
+   58   004A   80 0C           		SJMP Sum;	
+   59   004C   24 81           	testp	Add A, #129d;
+   60   004E   40 67           		JC lstmet;
+   61   0050   F7              		mov @R1, A;
+   62   0051   E5 31           		mov A, 31H;
+   63   0053   B4 FF 02        		CJNE A, #11111111b, Sum; 
+   64   0056   80 5F           		SJMP lstmet;
+   65   0058                   		
+   66                          	
+   67   0058                   			
+   68                          	
+   69   0058                   		
+   70   0058   78 22           	Sum:	mov R0, #22H;
+   71   005A   79 35           		mov R1, #35H;
+   72   005C   7B 03           		mov R3,#3d;
+   73   005E   E6              	per:	mov A, @R0;
+   74   005F   F7              		mov @R1, A;
+   75   0060   08              		inc R0;
+   76   0061   09              		inc R1;
+   77   0062   DB FA           		DJNZ R3, per;
+   78                          	
+   79   0064   75 32 00        		mov 32h,#0;
+   80   0067   75 33 00        		mov 33h,#0;
+   81   006A   75 34 00        		mov 34h,#0;
+   82   006D   7A 19           		mov R2, #25d;
+   83   006F   C3              		clr C;
+   84   0070   DA 04           	m1:	djnz R2, m2;
+   85   0072   40 22           		JC dop;
+   86   0074   80 2E           		sjmp m6;
+   87   0076   79 32           	m2:	mov R1, #32H;
+   88   0078   7B 02           		mov R3, #2d;
+   89   007A   7C 03           	m3: 	mov R4, #3d;
+   90   007C   E7              	m4:	mov A, @R1;
+   91   007D   13              		RRC A;
+   92   007E   F7              		mov @R1, A;
+   93   007F   09              		inc R1;
+   94   0080   DC FA           		DJNZ R4, m4;
+   95   0082   DB F6           		DJNZ R3, m3;
+   96   0084   50 EA           		jnc m1;
+   97   0086   C3              		clr C;
+   98   0087   78 14           		mov R0, #14H;
+   99   0089   79 34           		mov R1, #34H;
+  100   008B   7C 03           		mov R4, #3d;
+  101   008D   E7              	m5:	mov A, @R1;
+  102   008E   36              		ADDC A, @R0;
+  103   008F   F7              		mov @R1, A;
+  Wed Jan 14 2015 17:27                                                                                                  Page    3
+
+
+
+
+  104   0090   18              		DEC R0;
+  105   0091   19              		DEC R1;
+  106   0092   DC F9           		DJNZ R4, m5;
+  107   0094   80 DA           		SJMP	m1;
+  108   0096   78 32           	dop:	mov R0, #32H; // доп сдвиг
+  109   0098   7B 03           		mov R3, #3d;
+  110   009A   E6              	dop1:	mov A, @R0;
+  111   009B   13              		RRC A;
+  112   009C   F6              		mov @R0, A;
+  113   009D   08              		INC R0;
+  114   009E   DB FA           		DJNZ R3, dop1;
+  115   00A0   05 31           		inc 31H;	
+  116   00A2   80 00           		SJMP m6;	
+  117   00A4                   	m6:	
+  118                          	
+  119                          	
+  120   00A4   C3              		clr C;   // приведение результата к формату ИЕЕЕ
+  121   00A5   79 32           		mov R1, #32H;
+  122   00A7   75 41 03        		mov 41H, #3d;
+  123   00AA   E7              		mov A, @R1;
+  124   00AB   33              		RLC A;
+  125   00AC   C3              		clr C;
+  126   00AD   F7              		mov @R1, A; //убираем единицу
+  127   00AE                   		
+  128   00AE   79 30           		mov R1, #30H;
+  129   00B0   E7              	sb1	mov A, @R1;
+  130   00B1   13              		RRC A;
+  131   00B2   F7              		Mov @R1, A;
+  132   00B3   09              		inc R1;
+  133   00B4   D5 41 F9        		DJNZ 41H, sb1;
+  134   00B7                   		
+  135                          	
+  136                          	
+  137                          	
+  138                          	
+  139   00B7                   	lstmet
+  140                          	
+  141                          	
+
+
+
+           Lines Assembled :  141             Assembly Errors :  0
+
+
+
